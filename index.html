@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IMF Credit Cartel Terminal</title>
+  <style>
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50.01%, 100% { opacity: 0; }
+    }
+
+    @keyframes scanline {
+      0% { height: 0; }
+      99.99% { height: 100%; }
+      100% { height: 0; }
+    }
+
+    html, body {
+      margin: 0;
+      padding: 20px;
+      background-color: #000;
+      color: #f00;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 16px;
+      text-shadow: 0 0 1px #f00, 0 0 2px #f00, 0 0 3px #900;
+    }
+
+    .blink {
+      animation: blink 1s step-end infinite;
+    }
+
+    .scanline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(to bottom, rgba(255,0,0,0.02) 0px, rgba(255,0,0,0.03) 2px, transparent 3px);
+      animation: scanline 8s linear infinite;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .terminal {
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    .terminal a {
+      color: #f00;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="scanline"></div>
+  <div class="terminal" id="terminal">
+    <span class="blink">█</span>
+  </div>
+
+  <script>
+    const terminal = document.getElementById('terminal');
+    let blink = document.querySelector('.blink');
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    const typeLine = async text => {
+      blink.remove();
+      const isHTML = /<a /i.test(text);
+      if (isHTML) {
+        const div = document.createElement('div');
+        div.innerHTML = text;
+        terminal.appendChild(div);
+      } else {
+        for (let char of text) {
+          terminal.innerHTML += char;
+          await delay(20);
+        }
+        terminal.innerHTML += '\n';
+      }
+      terminal.innerHTML += '<span class="blink">█</span>';
+      blink = document.querySelector('.blink');
+    };
+
+    const shellPrint = async () => {
+      await typeLine("[INFO] initializing session with IMF Credit Cartel node...");
+      await delay(500);
+      await typeLine("[OK] connection established on port 1337");
+      await delay(800);
+      await typeLine("> curl -sL https://etherscan.io/api?... | jq '.result'");
+      await delay(1000);
+      await typeLine("");
+    };
+
+    const fetchData = async () => {
+      const mogRes = await fetch('https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0xaaee1a9723aadb7afa2810263653a34ba2c21c7a&address=0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb&tag=latest&apikey=28NGHGMVD73XMRW6M8IYDJQD55W63VMV86');
+      const mogData = await mogRes.json();
+      const mogAmount = Number(mogData.result) / 1e18;
+      const mogSupply = 390570159911439;
+
+      const thresholds = [0.01, 0.02, 0.05, 0.10, 0.20];
+      let targetPercent = 0.01;
+      for (let t of thresholds) {
+        if ((mogAmount / mogSupply) >= t) {
+          targetPercent = t;
+        } else {
+          break;
+        }
+      }
+
+      const mogTarget = mogSupply * targetPercent;
+      const mogProgress = (mogAmount / mogTarget) * 100;
+      const mogBlocks = Math.floor(mogProgress / 4.1667);
+      const mogBar = '█'.repeat(mogBlocks).padEnd(24, '░');
+
+      const usdsRes = await fetch('https://api.etherscan.io/api?module=stats&action=tokensupply&contractaddress=0xdef1fce2df6270fdf7e1214343bebbab8583d43d&apikey=28NGHGMVD73XMRW6M8IYDJQD55W63VMV86');
+      const usdsData = await usdsRes.json();
+      const usdsAmount = Number(usdsData.result) / 1e18;
+
+      const priceRes = await fetch('https://api.dexscreener.com/latest/dex/pairs/ethereum/0xc2eab7d33d3cb97692ecb231a5d0e4a649cb539d');
+      const priceData = await priceRes.json();
+      const mogPrice = Number(priceData.pair?.priceUsd || 0);
+      const mogValue = mogAmount * mogPrice;
+
+      const usdsTarget = mogValue * 0.5;
+
+      let usdsProgress = 0;
+      let usdsBar = '░'.repeat(24);
+      if (usdsTarget > 0 && isFinite(usdsTarget)) {
+        usdsProgress = (usdsAmount / usdsTarget) * 100;
+        const usdsBlocks = Math.floor(usdsProgress / 4.1667);
+        usdsBar = '█'.repeat(usdsBlocks).padEnd(24, '░');
+      }
+
+      await typeLine(`[TOKEN] $MOG deposits`);
+      await typeLine(`[DATA] contract: 0xbbbb...ffcb`);
+      await typeLine(`[FETCH] total: ${mogAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MOG (${mogValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)`);
+      await typeLine(`[TARGET] ${targetPercent * 100}% of supply: ${mogTarget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MOG`);
+      await typeLine(`[PROGRESS] ${mogBar} ${mogProgress.toFixed(2)}%`);
+
+      await typeLine("");
+
+      await typeLine(`[TOKEN] $USDS deposits`);
+      await typeLine(`[DATA] contract: 0xdef1...D43d`);
+      await typeLine(`[FETCH] total: ${usdsAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USDS (${usdsAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)`);
+      await typeLine(`[TARGET] 50% of MOG deposits: ${usdsTarget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`);
+      await typeLine(`[PROGRESS] ${usdsBar} ${usdsProgress.toFixed(2)}%`);
+
+      await typeLine("");
+
+      await typeLine(`[RUN] <a href='https://app.imf.bz/borrow' target='_blank'>Deposit MOG</a> | <a href='https://app.imf.bz/lend' target='_blank'>Deposit USDS</a>`);
+    };
+
+    (async () => {
+      await shellPrint();
+      await fetchData();
+    })();
+  </script>
+</body>
+</html>
