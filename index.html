@@ -173,37 +173,63 @@
     runSection.appendChild(runLine);
   }
 
-  const createWalletPrompt = () => {
-    const prompt = document.createElement('div');
-    prompt.innerHTML = `[INPUT] paste wallet address to simulate using imf credit: <span id="liveInput"></span><span class="blink">█</span>`;
-    const section = appendSection();
-    section.appendChild(prompt);
+  let prompt, liveInput;
 
-    const liveInput = document.getElementById('liveInput');
-    inputEl.value = '';
-    inputEl.focus();
+const handleInput = () => {
+  if (liveInput) liveInput.textContent = inputEl.value;
+};
 
-    inputEl.addEventListener('input', () => {
-      liveInput.textContent = inputEl.value;
-    });
+const handleKeyDown = async e => {
+  if (e.key === 'Enter') {
+    const address = inputEl.value.trim();
+    prompt?.remove();
+    await simulateCredit(address);
+  }
+};
 
-    inputEl.addEventListener('keydown', async e => {
-      if (e.key === 'Enter') {
-        const address = inputEl.value.trim();
-        prompt.remove();
-        await simulateCredit(address);
-      }
-    });
+const handlePaste = async () => {
+  await delay(50);
+  const address = inputEl.value.trim();
+  if (address) {
+    prompt?.remove();
+    await simulateCredit(address);
+  }
+};
 
-    inputEl.addEventListener('paste', async () => {
-      await delay(50); // wait for value to populate
-      const address = inputEl.value.trim();
-      if (address) {
-        prompt.remove();
-        await simulateCredit(address);
-      }
+const createWalletPrompt = () => {
+  prompt = document.createElement('div');
+  prompt.innerHTML = `[INPUT] paste wallet address to simulate using imf credit: <span id="liveInput"></span><span class="blink">█</span> <a href="#" id="clickToPaste" style="margin-left:10px; display: none;">[click to paste]</a>`;
+  const section = appendSection();
+  section.appendChild(prompt);
+
+  liveInput = document.getElementById('liveInput');
+  inputEl.value = '';
+  inputEl.focus();
+
+  inputEl.removeEventListener('input', handleInput);
+  inputEl.addEventListener('input', handleInput);
+
+  inputEl.removeEventListener('keydown', handleKeyDown);
+  inputEl.addEventListener('keydown', handleKeyDown);
+
+  inputEl.removeEventListener('paste', handlePaste);
+  inputEl.addEventListener('paste', handlePaste);
+
+  const clickToPaste = document.getElementById('clickToPaste');
+  if (clickToPaste && navigator.clipboard) {
+    if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      clickToPaste.style.display = 'inline';
+    }
+    clickToPaste.addEventListener('click', async e => {
+      e.preventDefault();
+      const text = await navigator.clipboard.readText();
+      inputEl.value = text;
+      inputEl.dispatchEvent(new Event('input'));
+      prompt.remove();
+      await simulateCredit(text.trim());
     });
   }
+};
 
   (async () => {
     await shellBoot();
